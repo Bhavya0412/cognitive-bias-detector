@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>HarmGuard</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { width: 340px; font-family: 'Segoe UI', system-ui, sans-serif;
+         background: #0f0f13; color: #e2e8f0; }
+  .header { background: linear-gradient(135deg,#6366f1,#8b5cf6);
+            padding: 16px; display:flex; align-items:center; gap:10px; }
+  .header h1 { font-size:16px; font-weight:700; }
+  .header .badge { font-size:10px; background:rgba(255,255,255,.2);
+                   border-radius:99px; padding:2px 8px; }
+  .body { padding: 16px; display:flex; flex-direction:column; gap:12px; }
+  textarea { width:100%; background:#1e1e2e; border:1px solid #3f3f5c;
+             border-radius:10px; color:#e2e8f0; padding:10px;
+             font-size:13px; resize:vertical; min-height:90px;
+             outline:none; transition:border .2s; }
+  textarea:focus { border-color:#6366f1; }
+  .row { display:flex; gap:8px; }
+  select { flex:1; background:#1e1e2e; border:1px solid #3f3f5c;
+           border-radius:8px; color:#e2e8f0; padding:8px; font-size:12px; }
+  button { flex:1; background:linear-gradient(135deg,#6366f1,#8b5cf6);
+           border:none; border-radius:8px; color:#fff; padding:9px;
+           font-size:13px; font-weight:600; cursor:pointer; transition:opacity .2s; }
+  button:hover { opacity:.85; }
+  button:disabled { opacity:.4; cursor:not-allowed; }
+  .result { border-radius:10px; padding:12px; display:none; }
+  .result.harmful  { background:#3f1515; border:1px solid #dc2626; }
+  .result.safe     { background:#0f291e; border:1px solid #059669; }
+  .result .label   { font-size:15px; font-weight:700; margin-bottom:4px; }
+  .result .detail  { font-size:11px; opacity:.75; line-height:1.5; }
+  .result .bar     { height:4px; border-radius:2px; margin-top:8px;
+                     background:#ffffff22; overflow:hidden; }
+  .result .bar-fill{ height:100%; border-radius:2px; transition:width .5s; }
+  .status { font-size:11px; color:#6b7280; text-align:center; }
+  .dot { display:inline-block; width:7px; height:7px; border-radius:50%;
+         margin-right:4px; }
+  .dot.green { background:#10b981; }
+  .dot.red   { background:#ef4444; }
+</style>
+</head>
+<body>
+<div class="header">
+  <span style="font-size:22px">🛡</span>
+  <div>
+    <h1>HarmGuard</h1>
+    <span class="badge">AI-Powered</span>
+  </div>
+</div>
+<div class="body">
+  <textarea id="txt" placeholder="Paste or type any text to analyse…"></textarea>
+  <div class="row">
+    <select id="model">
+      <option value="auto">Auto (Best)</option>
+      <option value="bert">BERT</option>
+      <option value="baseline">Baseline</option>
+    </select>
+    <button id="btn">Analyse</button>
+  </div>
+  <div class="result" id="result">
+    <div class="label" id="r-label"></div>
+    <div class="detail" id="r-detail"></div>
+    <div class="bar"><div class="bar-fill" id="r-bar"></div></div>
+  </div>
+  <div class="status" id="status"><span class="dot red"></span>Checking API…</div>
+</div>
+<script src="popup.js"></script>
+</body>
+</html>

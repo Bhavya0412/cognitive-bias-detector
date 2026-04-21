@@ -1,4 +1,4 @@
-﻿# Python
+# Python
 __pycache__/
 *.pyc
 *.pyo
@@ -15,6 +15,15 @@ env/
 *.swp
 .DS_Store
 
-# Flask
+# Data & Models
+data/
+models/
+*.pkl
+*.pth
+
+# App & Environment
 instance/
 *.log
+.env
+dist/
+build/

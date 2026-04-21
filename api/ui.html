@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HarmGuard — NLP Hate Speech Detection</title>
+<meta name="description" content="AI-powered hate speech and offensive language detection using fine-tuned DistilBERT.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#08080f;--surface:#12121c;--surface2:#1a1a2e;--border:#2a2a45;
+  --primary:#6366f1;--primary2:#8b5cf6;--green:#10b981;--red:#ef4444;
+  --amber:#f59e0b;--text:#e2e8f0;--muted:#64748b;--radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;
+     min-height:100vh;overflow-x:hidden}
+
+/* ── Animated background ── */
+body::before{content:'';position:fixed;inset:0;z-index:0;
+  background:radial-gradient(ellipse 80% 50% at 20% 20%,rgba(99,102,241,.12),transparent),
+             radial-gradient(ellipse 60% 40% at 80% 80%,rgba(139,92,246,.1),transparent);
+  pointer-events:none}
+
+.container{max-width:1100px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+/* ── Header ── */
+.header{padding:28px 0 20px;display:flex;align-items:center;justify-content:space-between;
+        border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:12px}
+.logo-icon{width:42px;height:42px;background:linear-gradient(135deg,var(--primary),var(--primary2));
+            border-radius:12px;display:grid;place-items:center;font-size:22px}
+.logo-text h1{font-size:20px;font-weight:800;letter-spacing:-.5px}
+.logo-text p{font-size:12px;color:var(--muted);margin-top:1px}
+.api-status{display:flex;align-items:center;gap:8px;font-size:13px}
+.dot{width:8px;height:8px;border-radius:50%}
+.dot.green{background:var(--green);box-shadow:0 0 8px var(--green)}
+.dot.red{background:var(--red)}
+.dot.pulse{animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── Layout ── */
+.main{padding:32px 0;display:grid;grid-template-columns:1fr 360px;gap:24px}
+@media(max-width:800px){.main{grid-template-columns:1fr}}
+
+/* ── Card ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px}
+.card-title{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppercase;
+            letter-spacing:.08em;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+
+/* ── Predict Section ── */
+.predict-area{display:flex;flex-direction:column;gap:16px}
+textarea{width:100%;background:var(--surface2);border:1.5px solid var(--border);
+         border-radius:10px;color:var(--text);padding:16px;font-size:15px;
+         font-family:'Inter',sans-serif;resize:vertical;min-height:130px;
+         outline:none;transition:border .2s,box-shadow .2s;line-height:1.6}
+textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(99,102,241,.15)}
+.controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+select{background:var(--surface2);border:1.5px solid var(--border);border-radius:9px;
+       color:var(--text);padding:10px 14px;font-size:13px;cursor:pointer;outline:none;
+       transition:border .2s}
+select:focus{border-color:var(--primary)}
+.btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary2));
+             border:none;border-radius:10px;color:#fff;padding:11px 28px;
+             font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s,transform .1s;
+             white-space:nowrap}
+.btn-primary:hover{opacity:.88}
+.btn-primary:active{transform:scale(.97)}
+.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.hint{font-size:11px;color:var(--muted);margin-left:auto}
+
+/* ── Result ── */
+.result-box{border-radius:12px;padding:20px;display:none;margin-top:4px;
+            animation:fadeUp .3s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.result-box.harmful{background:rgba(239,68,68,.08);border:1.5px solid rgba(239,68,68,.4)}
+.result-box.safe   {background:rgba(16,185,129,.08);border:1.5px solid rgba(16,185,129,.35)}
+.result-label{font-size:22px;font-weight:800;margin-bottom:8px}
+.result-label.harmful{color:var(--red)}
+.result-label.safe   {color:var(--green)}
+.result-meta{font-size:13px;color:var(--muted);line-height:1.7}
+.conf-bar{height:6px;background:var(--surface2);border-radius:3px;margin-top:14px;overflow:hidden}
+.conf-fill{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.34,1.56,.64,1)}
+.harmful .conf-fill{background:linear-gradient(90deg,#ef4444,#f87171)}
+.safe    .conf-fill{background:linear-gradient(90deg,#10b981,#34d399)}
+.conf-label{display:flex;justify-content:space-between;margin-top:6px;
+            font-size:11px;color:var(--muted)}
+
+/* ── Metrics cards ── */
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.metric-item{background:var(--surface2);border-radius:10px;padding:14px;text-align:center}
+.metric-val{font-size:22px;font-weight:800;font-family:'JetBrains Mono',monospace}
+.metric-lbl{font-size:11px;color:var(--muted);margin-top:2px}
+.badge-model{display:inline-flex;align-items:center;gap:6px;font-size:12px;
+             background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);
+             color:var(--primary);border-radius:99px;padding:4px 12px;margin-bottom:14px}
+
+/* ── Pipeline ── */
+.pipeline-btns{display:flex;flex-direction:column;gap:8px}
+.btn-pipeline{background:var(--surface2);border:1.5px solid var(--border);
+              border-radius:9px;color:var(--text);padding:11px 16px;
+              font-size:13px;font-weight:600;cursor:pointer;text-align:left;
+              transition:background .2s,border-color .2s;display:flex;
+              align-items:center;gap:10px}
+.btn-pipeline:hover{background:rgba(99,102,241,.1);border-color:var(--primary)}
+.btn-pipeline .icon{width:28px;height:28px;border-radius:8px;
+                    display:grid;place-items:center;font-size:15px;flex-shrink:0}
+.btn-pipeline .icon.v{background:rgba(99,102,241,.2)}
+.btn-pipeline .icon.b{background:rgba(16,185,129,.2)}
+.btn-pipeline .icon.r{background:rgba(139,92,246,.2)}
+.btn-pipeline div small{display:block;font-size:11px;color:var(--muted);font-weight:400;margin-top:1px}
+
+/* ── Log terminal ── */
+.log-box{background:#05050c;border:1px solid var(--border);border-radius:10px;
+         padding:14px;font-family:'JetBrains Mono',monospace;font-size:12px;
+         color:#a0aec0;height:200px;overflow-y:auto;white-space:pre-wrap;
+         line-height:1.6;display:none;margin-top:12px}
+.log-box.active{display:block}
+
+/* ── Dataset info ── */
+.ds-chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{background:var(--surface2);border:1px solid var(--border);border-radius:8px;
+      padding:8px 12px;font-size:12px;display:flex;flex-direction:column;gap:2px}
+.chip strong{font-size:16px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.chip span{color:var(--muted);font-size:11px}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- Header -->
+<div class="header">
+  <div class="logo">
+    <div class="logo-icon">🛡</div>
+    <div class="logo-text">
+      <h1>HarmGuard</h1>
+      <p>NLP Hate Speech Detection System</p>
+    </div>
+  </div>
+  <div class="api-status">
+    <div class="dot pulse" id="status-dot"></div>
+    <span id="status-text">Connecting…</span>
+  </div>
+</div>
+
+<!-- Main grid -->
+<div class="main">
+
+  <!-- Left column -->
+  <div style="display:flex;flex-direction:column;gap:24px">
+
+    <!-- Predict card -->
+    <div class="card">
+      <div class="card-title">🔍 Live Detection</div>
+      <div class="predict-area">
+        <textarea id="input-text"
+          placeholder="Type or paste any sentence here — e.g. 'Women are bad at driving' — and click Analyse to get an AI prediction."></textarea>
+        <div class="controls">
+          <select id="model-select">
+            <option value="auto">⚡ Auto (Best Available)</option>
+            <option value="bert">🤖 DistilBERT (Fine-tuned)</option>
+            <option value="baseline">📊 Baseline (TF-IDF)</option>
+          </select>
+          <button class="btn-primary" id="analyse-btn" onclick="runPredict()">Analyse</button>
+          <span class="hint">Ctrl+Enter</span>
+        </div>
+
+        <div class="result-box" id="result-box">
+          <div class="result-label" id="result-label"></div>
+          <div class="result-meta" id="result-meta"></div>
+          <div class="conf-bar"><div class="conf-fill" id="conf-fill"></div></div>
+          <div class="conf-label">
+            <span>0%</span><span id="conf-pct"></span><span>100%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pipeline card -->
+    <div class="card">
+      <div class="card-title">⚙️ Training Pipeline</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:16px">
+        Run each step in order. Output streams to the terminal below.
+        Make sure <code style="font-family:'JetBrains Mono';font-size:11px;color:var(--primary)">labeled_data.csv</code> is in the <code style="font-family:'JetBrains Mono';font-size:11px;color:var(--primary)">data/</code> folder first.
+      </p>
+      <div class="pipeline-btns">
+        <button class="btn-pipeline" onclick="runPipeline('validate')">
+          <div class="icon v">📋</div>
+          <div>Step 1 — Validate &amp; Clean Data<small>Checks nulls, duplicates, class balance → data/cleaned_data.csv</small></div>
+        </button>
+        <button class="btn-pipeline" onclick="runPipeline('train_baseline')">
+          <div class="icon b">📊</div>
+          <div>Step 2 — Train Baseline (TF-IDF + LR)<small>Trains and evaluates the logistic regression pipeline → models/</small></div>
+        </button>
+        <button class="btn-pipeline" onclick="runPipeline('train_bert')">
+          <div class="icon r">🤖</div>
+          <div>Step 3 — Fine-tune DistilBERT<small>GPU-accelerated training, 4 epochs → models/bert/</small></div>
+        </button>
+      </div>
+      <div class="log-box" id="log-box">Waiting for pipeline output…</div>
+    </div>
+
+  </div>
+
+  <!-- Right column -->
+  <div style="display:flex;flex-direction:column;gap:24px">
+
+    <!-- Model metrics card -->
+    <div class="card">
+      <div class="card-title">📈 Model Metrics</div>
+      <div id="metrics-area">
+        <p style="font-size:13px;color:var(--muted)">Train a model to see metrics here.</p>
+      </div>
+    </div>
+
+    <!-- Dataset card -->
+    <div class="card">
+      <div class="card-title">🗄️ Dataset Info</div>
+      <div class="badge-model">Davidson et al. (2017) Hate Speech Corpus</div>
+      <div class="ds-chips">
+        <div class="chip"><strong>~25K</strong><span>Total samples</span></div>
+        <div class="chip"><strong>3</strong><span>Original classes</span></div>
+        <div class="chip"><strong>2</strong><span>Binary labels</span></div>
+        <div class="chip"><strong>77%</strong><span>Harmful rate</span></div>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-top:14px;line-height:1.6">
+        Classes: <b style="color:#ef4444">0</b> hate speech ·
+        <b style="color:#f59e0b">1</b> offensive language ·
+        <b style="color:#10b981">2</b> neither.
+        Binary mapping: 0+1 → harmful, 2 → non-harmful.
+      </p>
+    </div>
+
+    <!-- Pipeline guide card -->
+    <div class="card">
+      <div class="card-title">🚀 Quick Start</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.9;font-family:'JetBrains Mono',monospace">
+        <div style="color:var(--primary)"># Install dependencies</div>
+        <div>pip install -r requirements.txt</div>
+        <br>
+        <div style="color:var(--primary)"># Start the API + UI</div>
+        <div>uvicorn api.app:app --reload</div>
+        <br>
+        <div style="color:var(--primary)"># Or run scripts directly</div>
+        <div>python scripts/1_validate_data.py</div>
+        <div>python scripts/2_train_baseline.py</div>
+        <div>python scripts/3_train_bert.py</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<script>
+const API = "";  // same origin
+
+// ── Startup ────────────────────────────────────────────────────────────────
+async function checkHealth() {
+  try {
+    const res  = await fetch(`${API}/health`);
+    const data = await res.json();
+    const dot  = document.getElementById("status-dot");
+    const txt  = document.getElementById("status-text");
+    dot.classList.remove("pulse");
+    if (data.bert_loaded || data.baseline_loaded) {
+      dot.classList.add("green");
+      const mode = data.bert_loaded ? "DistilBERT" : "Baseline";
+      txt.textContent = `API online · ${mode} active`;
+    } else {
+      dot.classList.add("red");
+      txt.textContent = "API online · No model loaded";
+    }
+    renderMetrics(data);
+  } catch {
+    document.getElementById("status-dot").style.background="#ef4444";
+    document.getElementById("status-text").textContent="API offline";
+  }
+}
+
+function renderMetrics(data) {
+  const area = document.getElementById("metrics-area");
+  const bm   = data.bert_metrics;
+  const blm  = data.baseline_metrics;
+  const src  = (bm && bm.f1) ? {label:"DistilBERT",m:bm} :
+               (blm && blm.f1) ? {label:"Baseline",m:blm} : null;
+  if (!src) { area.innerHTML=`<p style="font-size:13px;color:var(--muted)">No metrics yet — run training first.</p>`; return; }
+  const pct = v => (v*100).toFixed(1)+"%";
+  area.innerHTML = `
+    <div class="badge-model">🤖 ${src.label}</div>
+    <div class="metric-grid">
+      <div class="metric-item">
+        <div class="metric-val" style="color:var(--green)">${pct(src.m.accuracy)}</div>
+        <div class="metric-lbl">Accuracy</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-val" style="color:var(--primary)">${pct(src.m.precision)}</div>
+        <div class="metric-lbl">Precision</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-val" style="color:var(--amber)">${pct(src.m.recall)}</div>
+        <div class="metric-lbl">Recall</div>
+      </div>
+      <div class="metric-item">
+        <div class="metric-val" style="color:var(--primary2)">${pct(src.m.f1)}</div>
+        <div class="metric-lbl">F1-Score</div>
+      </div>
+    </div>`;
+}
+
+// ── Predict ────────────────────────────────────────────────────────────────
+async function runPredict() {
+  const text  = document.getElementById("input-text").value.trim();
+  if (!text) return;
+  const btn   = document.getElementById("analyse-btn");
+  const model = document.getElementById("model-select").value;
+  btn.disabled = true; btn.textContent = "Analysing…";
+
+  try {
+    const res  = await fetch(`${API}/predict`, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({text, model_choice:model})
+    });
+    if (!res.ok) { const e=await res.json(); throw new Error(e.detail||"Error"); }
+    const d = await res.json();
+    showResult(d);
+  } catch(e) {
+    alert("Prediction failed: " + e.message);
+  } finally {
+    btn.disabled=false; btn.textContent="Analyse";
+  }
+}
+
+function showResult(d) {
+  const box   = document.getElementById("result-box");
+  const label = document.getElementById("result-label");
+  const meta  = document.getElementById("result-meta");
+  const fill  = document.getElementById("conf-fill");
+  const pct   = document.getElementById("conf-pct");
+  const harmful = d.label_id === 1;
+
+  box.className   = "result-box " + (harmful ? "harmful" : "safe");
+  box.style.display = "block";
+  label.className = "result-label " + (harmful ? "harmful" : "safe");
+  label.textContent = harmful ? "⚠️  Harmful / Offensive" : "✅  Non-Harmful";
+  meta.innerHTML  = `
+    <b>Prediction:</b> ${d.label}<br>
+    <b>Confidence:</b> ${(d.confidence*100).toFixed(2)}%<br>
+    <b>Model:</b> ${d.model_used}<br>
+    <b>Input:</b> "${d.text_preview}"`;
+  fill.style.width = (d.confidence*100)+"%";
+  pct.textContent  = (d.confidence*100).toFixed(1)+"%";
+}
+
+// ── Pipeline ───────────────────────────────────────────────────────────────
+let pollTimer = null;
+
+async function runPipeline(cmd) {
+  const log = document.getElementById("log-box");
+  log.classList.add("active");
+  log.textContent = `▶ Starting: ${cmd}…\n`;
+
+  await fetch(`${API}/pipeline/run`,{
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({command:cmd})
+  });
+
+  clearInterval(pollTimer);
+  pollTimer = setInterval(async ()=>{
+    const r    = await fetch(`${API}/pipeline/log`);
+    const data = await r.json();
+    log.textContent = data.log;
+    log.scrollTop   = log.scrollHeight;
+    if (data.log.includes("✅") || data.log.includes("❌")) {
+      clearInterval(pollTimer);
+      await checkHealth();  // refresh metrics after training
+    }
+  }, 1000);
+}
+
+// ── Keys ───────────────────────────────────────────────────────────────────
+document.getElementById("input-text").addEventListener("keydown", e=>{
+  if (e.key==="Enter" && e.ctrlKey) runPredict();
+});
+
+checkHealth();
+setInterval(checkHealth, 15000);
+</script>
+</body>
+</html>
