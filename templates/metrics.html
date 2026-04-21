@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Model Metrics — Bias Detector</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-mark"></div>
+        <div class="brand-text">
+          <h1>Cognitive Bias Detector</h1>
+          <p>Model evaluation on held-out test set</p>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="/">Analyzer</a>
+        <a href="/metrics" class="active">Model Metrics</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Classification performance</h2>
+        <span class="hint">TF-IDF (word + char n-grams) → Logistic Regression</span>
+      </div>
+
+      <div id="metrics-loading" class="loading-text">Loading metrics…</div>
+
+      <div id="metrics-content" class="hidden">
+        <!-- Headline accuracy -->
+        <div class="accuracy-card">
+          <div class="accuracy-label">Test-set accuracy</div>
+          <div class="accuracy-value" id="accuracy-value">—</div>
+        </div>
+
+        <!-- Per-class table -->
+        <div class="subsection">
+          <h3>Per-class performance</h3>
+          <table class="metrics-table">
+            <thead>
+              <tr>
+                <th>Bias Class</th>
+                <th>Precision</th>
+                <th>Recall</th>
+                <th>F1</th>
+                <th>Support</th>
+              </tr>
+            </thead>
+            <tbody id="metrics-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- Confusion matrix -->
+        <div class="subsection">
+          <h3>Confusion matrix</h3>
+          <div class="cm-caption">Rows = true class · Columns = predicted class</div>
+          <div id="confusion-matrix"></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>Cognitive Bias Detection &amp; Debiasing Assistant · NLP Project</p>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/metrics.js') }}"></script>
+</body>
+</html>

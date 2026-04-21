@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cognitive Bias Detection & Debiasing Assistant</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-mark"></div>
+        <div class="brand-text">
+          <h1>Cognitive Bias Detector</h1>
+          <p>NLP-based assistant for clearer, less-biased writing</p>
+        </div>
+      </div>
+      <nav class="nav-links">
+        <a href="/" class="active">Analyzer</a>
+        <a href="/metrics">Model Metrics</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- INPUT PANEL -->
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Enter your text</h2>
+        <span class="hint">Paste an email, a report paragraph, or any written statement.</span>
+      </div>
+
+      <textarea id="input-text"
+                placeholder="Example: This method always works because it worked once before. The first price I saw was $1000, so anything lower feels cheap."
+                rows="8"></textarea>
+
+      <div class="controls">
+        <div class="examples">
+          <span class="ex-label">Try an example:</span>
+          <button class="chip" data-example="confirmation">Confirmation</button>
+          <button class="chip" data-example="anchoring">Anchoring</button>
+          <button class="chip" data-example="availability">Availability</button>
+          <button class="chip" data-example="framing">Framing</button>
+          <button class="chip" data-example="neutral">Neutral</button>
+        </div>
+        <div class="action-buttons">
+          <button id="clear-btn" class="btn btn-ghost">Clear</button>
+          <button id="analyze-btn" class="btn btn-primary">
+            <span class="btn-label">Analyze Text</span>
+            <span class="btn-spinner" aria-hidden="true"></span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESULTS PANEL (hidden until analysis runs) -->
+    <section id="results" class="panel results-panel hidden">
+
+      <!-- Overall verdict -->
+      <div class="verdict-card">
+        <div class="verdict-left">
+          <div class="verdict-label">Overall classification</div>
+          <div class="verdict-bias" id="overall-bias">—</div>
+          <div class="verdict-explanation" id="overall-explanation"></div>
+        </div>
+        <div class="verdict-right">
+          <div class="confidence-ring">
+            <svg viewBox="0 0 120 120">
+              <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+              <circle class="ring-fg" cx="60" cy="60" r="52" id="confidence-ring"></circle>
+            </svg>
+            <div class="confidence-number" id="confidence-number">0%</div>
+          </div>
+          <div class="confidence-caption">Model confidence</div>
+        </div>
+      </div>
+
+      <!-- Probability distribution -->
+      <div class="subsection">
+        <h3>Probability distribution</h3>
+        <div id="prob-bars" class="prob-bars"></div>
+      </div>
+
+      <!-- Per-sentence breakdown -->
+      <div class="subsection">
+        <h3>Sentence-by-sentence breakdown</h3>
+        <div id="sentence-list" class="sentence-list"></div>
+      </div>
+
+      <!-- Debiased rewrite -->
+      <div class="subsection rewrite-section">
+        <h3>Suggested debiased rewrite</h3>
+        <div class="rewrite-box">
+          <div class="rewrite-col">
+            <div class="rewrite-label before">Before</div>
+            <div class="rewrite-text" id="original-text"></div>
+          </div>
+          <div class="rewrite-arrow">→</div>
+          <div class="rewrite-col">
+            <div class="rewrite-label after">After</div>
+            <div class="rewrite-text" id="debiased-text"></div>
+          </div>
+        </div>
+        <button id="copy-btn" class="btn btn-secondary">Copy rewrite</button>
+      </div>
+
+    </section>
+
+    <!-- BIAS REFERENCE CARDS -->
+    <section class="reference-section">
+      <h2 class="reference-title">The four biases this tool detects</h2>
+      <div class="bias-cards">
+        <article class="bias-card">
+          <div class="bias-card-num">1</div>
+          <h3>Confirmation Bias</h3>
+          <p><strong>Definition:</strong> Favoring information that supports existing beliefs while ignoring contradictory evidence.</p>
+          <p class="example"><em>"This method always works — critics are wrong."</em></p>
+        </article>
+        <article class="bias-card">
+          <div class="bias-card-num">2</div>
+          <h3>Anchoring Bias</h3>
+          <p><strong>Definition:</strong> Relying too heavily on the first piece of information encountered in decision-making.</p>
+          <p class="example"><em>"The first price was $1000, so anything lower feels cheap."</em></p>
+        </article>
+        <article class="bias-card">
+          <div class="bias-card-num">3</div>
+          <h3>Availability Heuristic</h3>
+          <p><strong>Definition:</strong> Judging the likelihood of an event by how easily examples come to mind.</p>
+          <p class="example"><em>"I just saw it on the news, so it must be common."</em></p>
+        </article>
+        <article class="bias-card">
+          <div class="bias-card-num">4</div>
+          <h3>Framing Effect</h3>
+          <p><strong>Definition:</strong> Decisions influenced by how information is presented or worded.</p>
+          <p class="example"><em>"90% success rate sounds better than 10% failure rate."</em></p>
+        </article>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>Cognitive Bias Detection &amp; Debiasing Assistant · NLP Project ·
+       TF-IDF + Logistic Regression · Flask</p>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>

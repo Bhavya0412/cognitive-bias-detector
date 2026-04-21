@@ -1,0 +1,79 @@
+{
+  "accuracy": 0.9782352941176471,
+  "classes": [
+    "anchoring_bias",
+    "availability_heuristic",
+    "confirmation_bias",
+    "framing_effect",
+    "neutral"
+  ],
+  "confusion_matrix": [
+    [
+      337,
+      1,
+      1,
+      1,
+      1
+    ],
+    [
+      0,
+      332,
+      1,
+      1,
+      4
+    ],
+    [
+      3,
+      5,
+      328,
+      1,
+      1
+    ],
+    [
+      3,
+      2,
+      4,
+      331,
+      1
+    ],
+    [
+      4,
+      0,
+      1,
+      2,
+      335
+    ]
+  ],
+  "per_class": {
+    "anchoring_bias": {
+      "precision": 0.9711815561959655,
+      "recall": 0.9882697947214076,
+      "f1": 0.9796511627906976,
+      "support": 341
+    },
+    "availability_heuristic": {
+      "precision": 0.9764705882352941,
+      "recall": 0.9822485207100592,
+      "f1": 0.9793510324483776,
+      "support": 338
+    },
+    "confirmation_bias": {
+      "precision": 0.9791044776119403,
+      "recall": 0.9704142011834319,
+      "f1": 0.974739970282318,
+      "support": 338
+    },
+    "framing_effect": {
+      "precision": 0.9851190476190477,
+      "recall": 0.9706744868035191,
+      "f1": 0.9778434268833087,
+      "support": 341
+    },
+    "neutral": {
+      "precision": 0.97953216374269,
+      "recall": 0.97953216374269,
+      "f1": 0.97953216374269,
+      "support": 342
+    }
+  }
+}
