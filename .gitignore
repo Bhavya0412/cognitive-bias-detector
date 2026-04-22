@@ -15,15 +15,14 @@ env/
 *.swp
 .DS_Store
 
-# Data & Models
-data/
-models/
-*.pkl
-*.pth
-
-# App & Environment
+# Flask
 instance/
 *.log
 .env
+
+# Build
 dist/
 build/
+
+# Duplicate nested clone folder (local-only clutter)
+cognitive-bias-detector/
